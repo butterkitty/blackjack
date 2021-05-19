@@ -141,8 +141,6 @@ class IRC(object):
 			if (self.dealer_total >= 11 and card_type == 'ace'): 
 				card_value = 1
 			self.dealer_total += card_value
-#		if card_type == 'ace' and deck['ace'][1] != 1:
-#			deck['ace'][1] = 1
 		return (card_type, card_suit)
 
 	def error(self, chan, msg, reason=None):
@@ -187,9 +185,9 @@ class IRC(object):
 			else:
 				cmd  = msg.split()[0][1:]
 				args = msg[len(cmd)+2:]
-				if time.time() - self.last_time < 2:
-					self.sendmsg(chan, color('Slow down nerd!', red))
-				elif cmd == 'hit':
+#				if time.time() - self.last_time < 2:
+#					self.sendmsg(chan, color('Slow down nerd!', red))
+				if cmd == 'hit':
 					if self.player:
 						if self.player == nick:
 							card_type, card_suit = self.draw()
