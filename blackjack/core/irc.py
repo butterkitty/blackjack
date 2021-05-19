@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# BlackJack IRC Bot - Developed by acidvegas in Python (https://acid.vegas/blackjack)
+# BlackJack IRC Bot - Developed by butterkitty in Python, based on acidvegas' bot (https://acid.vegas/blackjack)
 # irc.py
 
 import inspect
@@ -73,12 +73,14 @@ def color(msg, foreground, background=None):
 class IRC(object):
 	def __init__(self):
 		self.ace_minus = False
-		self.hand      = None
+		self.player_hand      = []
+		self.dealer_hand	= []
 		self.last_move = 0
 		self.last_time = 0
 		self.player    = None
-		self.total     = 0
-		self.mini_deck = False
+		self.player_total     = 0
+		self.dealer_total	= 0
+		self.mini_deck  = config.settings.mini_deck #Full size not currently working
 		self.sock       = None
 		self.username	= config.ident.username
 
@@ -107,7 +109,7 @@ class IRC(object):
 		if config.connection.ssl:
 			self.sock = ssl.wrap_socket(self.sock)
 
-	def draw(self):
+	def draw(self, dealer=False):
 		card_type = random.choice(list(deck.keys()))
 		remaining = deck[card_type][2]
 		while not remaining:
@@ -122,16 +124,25 @@ class IRC(object):
 		if self.mini_deck:
 			card = deck[card_type][0].replace('X', card_suit[0])
 			card = color(card, card_color, white)
-			self.hand.append(card)
+			if (not dealer): self.player_hand.append(card)
+			else: self.dealer_hand.append(card)
 		else:
 			for i in range(5):
 				card = deck[card_type][0][i].replace('X', card_suit[0])
 				card = color(card, card_color, white)
-				self.hand[i].append(card)
+				if (not dealer): self.player_hand[i].append(card)
+				else: self.dealer_hand[i].append(card)
 		deck[card_type][2].remove(card_suit)
-		self.total += card_value
-		if card_type == 'ace' and deck['ace'][1] != 1:
-			deck['ace'][1] = 1
+		if (not dealer): 
+			if (self.player_total >= 11 and card_type == 'ace'): #If the player is at 11 points and the card is an ace, the ace becomes a value of 1
+				card_value = 1 
+			self.player_total += card_value
+		else: 
+			if (self.dealer_total >= 11 and card_type == 'ace'): 
+				card_value = 1
+			self.dealer_total += card_value
+#		if card_type == 'ace' and deck['ace'][1] != 1:
+#			deck['ace'][1] = 1
 		return (card_type, card_suit)
 
 	def error(self, chan, msg, reason=None):
@@ -141,7 +152,8 @@ class IRC(object):
 			self.sendmsg(chan, '[{0}] {1}'.format(color('ERROR', red), msg))
 
 	def event_connect(self):
-		self.setup_deck('normal')
+		if (self.mini_deck): self.setup_deck('mini')
+		else: self.setup_deck('normal')
 		if config.login.nickserv:
 			self.identify(self.username, config.login.nickserv)
 		if config.login.operator:
@@ -161,19 +173,17 @@ class IRC(object):
 
 	def event_message(self, nick, chan, msg):
 		if chan == config.connection.channel:
-			if not msg.startswith('.'):
+			if not msg.startswith(config.settings.cmd_char):
 				if msg == '@help':
 					self.action(chan, 'Sending help in a private message...')
 					help = [line.strip() for line in open(help_file).readlines() if line]
 					for line in help:
 						self.sendmsg(nick, line)
-						time.sleep(1)
 				elif msg == '@cheat':
 					self.action(chan, 'Sending cheat sheet in a private message...')
 					cheat_sheet = [line.strip() for line in open(cheat_file).readlines() if line]
 					for line in cheat_sheet:
 						self.sendmsg(nick, line)
-						time.sleep(1)
 			else:
 				cmd  = msg.split()[0][1:]
 				args = msg[len(cmd)+2:]
@@ -185,74 +195,82 @@ class IRC(object):
 							card_type, card_suit = self.draw()
 							if self.mini_deck:
 								msg_str = ''
-								for i in self.hand:
+								for i in self.player_hand:
 									msg_str += ' ' + i
 								self.sendmsg(chan, msg_str)
 							else:
 								for i in range(5):
 									msg_str = ''
-									for i in self.hand[i]:
+									for i in self.player_hand[i]:
 										msg_str += ' ' + i
 									self.sendmsg(chan, msg_str)
-							if self.total > 21:
+							if self.player_total > 21:
 								if deck['ace'][1] == 1 and not self.ace_minus:
-									self.total	 = self.total - 10
+									self.player_total	 = self.player_total - 10
 									self.ace_minus = True
-									if self.total > 21:
+									if self.player_total > 21:
 										self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
 										self.reset()
 									else:
-										self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.total), light_blue)))
+										self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue)))
 										self.last_move = time.time()
 								else:
 									self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
 									self.reset()
 							else:
-								self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.total), light_blue)))
+								self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue)))
 								self.last_move = time.time()
 						else:
 							self.error(chan, 'You are not currently playing!', '{0} is playing still'.format(self.player))
 					else:
 						self.error(chan, 'You are not currently playing!')
-				elif cmd == 'mini':
-					if not self.player:
-						if self.mini_deck:
-							self.setup_deck('normal')
-							self.sendmsg(chan, '{0} {1}'.format(color('Mini deck has been', yellow), color('DISABLED', red)))
-						else:
-							self.setup_deck('mini')
-							self.sendmsg(chan, '{0} {1}'.format(color('Mini deck has been', yellow), color('ENABLED', green)))
-					else:
-						self.error(chan, 'You can not change the deck in game!')
+#				elif cmd == 'mini':
+#					if not self.player:
+#						if self.mini_deck:
+#							self.setup_deck('normal')
+#							self.sendmsg(chan, '{0} {1}'.format(color('Mini deck has been', yellow), color('DISABLED', red)))
+#						else:
+#							self.setup_deck('mini')
+#							self.sendmsg(chan, '{0} {1}'.format(color('Mini deck has been', yellow), color('ENABLED', green)))
+#					else:
+#						self.error(chan, 'You can not change the deck in game!')
 				elif cmd == 'play':
 					if not self.player:
 						self.player = nick
 						self.action(chan, 'Starting a game of blackjack with {0}!'.format(nick))
 						for i in range(2):
 							self.draw()
+							self.draw(dealer=True)
 						if self.mini_deck:
-							msg_str = ''
-							for i in self.hand:
+							msg_str = 'Your Hand'
+							for i in self.player_hand:
 								msg_str += ' ' + i
+							self.sendmsg(chan, msg_str)
+							msg_str = 'Dealer Hand'
+							msg_str += ' ' + self.dealer_hand[0] #Only show first card since it's the dealer
 							self.sendmsg(chan, msg_str)
 						else:
 							for i in range(5):
-								msg_str = ''
-								for i in self.hand[i]:
+								msg_str = 'Player Hand'
+								for i in self.player_hand[i]:
 									msg_str += ' ' + i
 								self.sendmsg(chan, msg_str)
-						self.sendmsg(chan, '{0} {1}'.format(color('Your total is now:', yellow), color(str(self.total), light_blue)))
+								msg_str = 'Dealer Hand'
+								msg_str += ' ' + str(self.dealer_hand[i][0]) #Only show first card since it's the dealer
+								self.sendmsg(chan, msg_str)
+						self.sendmsg(chan, '{0} {1}'.format(color('Your total is now:', yellow), color(str(self.player_total), light_blue)))
 						self.last_move = time.time()
 						threading.Thread(target=self.timer).start()
 					elif self.player == nick:
 						self.error(chan, 'You have already started a game, please finish or stop the game!'.format(self.player))
 					else:
 						self.error(chan, '{0} is currently playing a game, please wait!'.format(self.player))
-				elif cmd == 'stand':
+				elif cmd == 'stand' or cmd == 'stay':
 					if self.player:
 						if self.player == nick:
-							self.sendmsg(chan, 'You have chosen to stand with {0} as your total.'.format(self.total))
-							self.reset()
+							self.sendmsg(chan, 'You have chosen to stand with {0} as your total.'.format(color(self.player_total, light_blue)))
+							self.dealer_play(chan)
+							
 						else:
 							self.error(chan, 'You are not currently playing!', '{0} is playing still'.format(self.player))
 					else:
@@ -267,6 +285,46 @@ class IRC(object):
 					else:
 						self.error(chan, 'You are not currently playing!')
 			self.last_time = time.time()
+
+	def dealer_play(self, chan):
+		msg_str = 'Dealer Hand'
+		for i in self.dealer_hand:
+			msg_str += ' ' + i
+		self.sendmsg(chan, msg_str)
+		done = False
+		winner = ""
+		while (not done):
+			time.sleep(1)
+			if self.dealer_total > 21:
+				self.sendmsg(chan, '{0} {1}'.format(color('DEALER BUSTS!', green), color('Dealer went over 21 and lost!', grey)))
+				winner = "Player"
+				done = True
+			elif (self.dealer_total) == 21: 
+				winner = "Dealer"
+				done = True
+			elif (self.dealer_total) >= 17: #Dealer always stands at or over 17
+				if (self.dealer_total >= self.player_total):
+					winner = "Dealer"
+					done = True
+				else:
+					winner = "Player"
+					done = True
+			elif self.player_total <= self.dealer_total: 
+				winner = "Dealer"
+				done = True
+			elif self.player_total > self.dealer_total: #Dealer will always hit if it's lower than player
+				self.draw(dealer=True)
+				msg_str = color('Dealer Hits - Dealer Hand',yellow)
+				for i in self.dealer_hand:
+					msg_str += ' ' + i
+				self.sendmsg(chan, msg_str)
+				self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
+		
+		if (winner != "Dealer"):
+			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - ' + self.player + ' wins with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
+		else:
+			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - Dealer wins with:', green), color(str(self.dealer_total), light_blue), color(self.player + ' with:', red), color(str(self.player_total), light_blue)))
+		self.reset()
 
 	def event_nick_in_use(self):
 		debug.error_exit('BlackJack is already running.')
@@ -344,21 +402,26 @@ class IRC(object):
 		self.ace       = [False,False]
 		self.last_move = 0
 		self.player    = None
-		self.total     = 0
+		self.player_total     = 0
+		self.dealer_total	= 0
 		if self.mini_deck:
-			self.hand = []
+			self.player_hand = []
+			self.dealer_hand = []
 		else:
-			self.hand = {0:[],1:[],2:[],3:[],4:[]}
+			self.player_hand = {0:[],1:[],2:[],3:[],4:[]}
+			self.dealer_hand = {0:[],1:[],2:[],3:[],4:[]}
 		deck['ace'][1] = 11
 		for card in deck:
 			deck[card][2] = [club,diamond,heart,spade]
 
 	def sendmsg(self, target, msg):
+		time.sleep(1)
 		self.raw(f'PRIVMSG {target} :{msg}')
 
 	def setup_deck(self, deck_type):
 		if deck_type == 'mini':
-			self.hand        = []
+			self.player_hand = []
+			self.dealer_hand = []
 			self.mini_deck   = True
 			deck['ace'][0]   = 'A X'
 			deck['two'][0]   = '2 X'
@@ -374,7 +437,8 @@ class IRC(object):
 			deck['queen'][0] = 'Q X'
 			deck['king'][0]  = 'K X'
 		elif deck_type == 'normal':
-			self.hand        = {0:[],1:[],2:[],3:[],4:[]}
+			self.player_hand = {0:[],1:[],2:[],3:[],4:[]}
+			self.dealer_hand = {0:[],1:[],2:[],3:[],4:[]}
 			self.mini_deck   = False
 			deck['ace'][0]   = ('A      ','       ','   X   ','       ','      A')
 			deck['two'][0]   = ('2      ','   X   ','       ','   X   ','      2')

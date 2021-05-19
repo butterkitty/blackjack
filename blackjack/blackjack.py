@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# BlackJack IRC Bot - Developed by acidvegas in Python (https://acid.vegas/blackjack)
+# BlackJack IRC Bot - Developed by butterkitty in Python, based on acidvegas' bot (https://acid.vegas/blackjack)
 # blackjack.py
 
 import os

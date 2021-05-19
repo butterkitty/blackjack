@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# BlackJack IRC Bot - Developed by acidvegas in Python (https://acid.vegas/blackjack)
+# BlackJack IRC Bot - Developed by butterkitty in Python, based on acidvegas' bot (https://acid.vegas/blackjack)
 # config.py
 
 class connection:
@@ -32,4 +32,5 @@ class settings:
 	cmd_char = '.'
 	log      = False
 	modes    = None
-	timeout	= 120
+	mini_deck = True
+	timeout	= 30

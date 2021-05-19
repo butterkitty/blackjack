@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# BlackJack IRC Bot - Developed by acidvegas in Python (https://acid.vegas/blackjack)
+# BlackJack IRC Bot - Developed by butterkitty in Python, based on acidvegas' bot (https://acid.vegas/blackjack)
 # debug.py
 
 import ctypes
@@ -54,8 +54,9 @@ def info():
     print(''.rjust(56, '#'))
     print('#{0}#'.format(''.center(54)))
     print('#{0}#'.format('BlackJack IRC Bot'.center(54)))
-    print('#{0}#'.format('Developed by acidvegas in Python'.center(54)))
-    print('#{0}#'.format('https://acid.vegas/blackjack'.center(54)))
+    print('#{0}#'.format('Developed by butterkitty in Python'.center(54)))
+    print('#{0}#'.format('based on acidvegas\' bot'.center(54)))
+    print('#{0}#'.format('(https://acid.vegas/blackjack)'.center(54)))
     print('#{0}#'.format(''.center(54)))
     print(''.rjust(56, '#'))
 
