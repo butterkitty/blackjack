@@ -3,14 +3,14 @@
 # config.py
 
 class connection:
-	server     = 'irc.server.com'
-	port       = 6667
+	server     = 'irc.libera.chat'
+	port       = 6697
 	proxy      = None
 	ipv6       = False
-	ssl	       = False
-	ssl_verify = False
+	ssl	       = True
+	ssl_verify = True
 	vhost      = None
-	channel	   = '#blackjack'
+	channel	   = '#***REMOVED***'
 	key	       = None
 
 class cert:
@@ -19,16 +19,17 @@ class cert:
 	password = None
 
 class ident:
-	nickname = 'BlackJack'
+	nickname = 'blackJack'
 	username = 'blackjack'
-	realname = 'https://acid.vegas/blackjack'
+	realname = None
 
 class login:
 	network  = None
-	nickserv = None
+	nickserv = '***REMOVED***'
 	operator = None
 
 class settings:
-	cmd_char = '!'
+	cmd_char = '.'
 	log      = False
 	modes    = None
+	timeout	= 120

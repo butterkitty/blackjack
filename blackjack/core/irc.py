@@ -80,6 +80,7 @@ class IRC(object):
 		self.total     = 0
 		self.mini_deck = False
 		self.sock       = None
+		self.username	= config.ident.username
 
 	def action(self, chan, msg):
 		self.sendmsg(chan, '\x01ACTION {0}\x01'.format(msg))
@@ -165,12 +166,14 @@ class IRC(object):
 					self.action(chan, 'Sending help in a private message...')
 					help = [line.strip() for line in open(help_file).readlines() if line]
 					for line in help:
-						self.sendmsg(chan, line)
+						self.sendmsg(nick, line)
+						time.sleep(1)
 				elif msg == '@cheat':
 					self.action(chan, 'Sending cheat sheet in a private message...')
 					cheat_sheet = [line.strip() for line in open(cheat_file).readlines() if line]
 					for line in cheat_sheet:
-						self.sendmsg(chan, line)
+						self.sendmsg(nick, line)
+						time.sleep(1)
 			else:
 				cmd  = msg.split()[0][1:]
 				args = msg[len(cmd)+2:]
@@ -249,6 +252,7 @@ class IRC(object):
 					if self.player:
 						if self.player == nick:
 							self.sendmsg(chan, 'You have chosen to stand with {0} as your total.'.format(self.total))
+							self.reset()
 						else:
 							self.error(chan, 'You are not currently playing!', '{0} is playing still'.format(self.player))
 					else:
@@ -388,7 +392,7 @@ class IRC(object):
 
 	def timer(self):
 		while self.player:
-			if time.time() - self.last_move > self.game_timeout:
+			if time.time() - self.last_move > config.settings.timeout:
 				self.sendmsg(config.connection.channel, '{0}, you took too long! The game has ended.'.format(self.player))
 				self.reset()
 				break
