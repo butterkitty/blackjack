@@ -340,7 +340,8 @@ class IRC(object):
 				for i in self.dealer_hand:
 					msg_str += ' ' + i
 				self.sendmsg(chan, msg_str)
-				self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
+				if (not self.dealer_total > 21): 
+					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
 		
 		if (winner != "Dealer"):
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - ' + self.player + ' wins with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
