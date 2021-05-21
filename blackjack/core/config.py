@@ -3,14 +3,14 @@
 # config.py
 
 class connection:
-	server     = 'irc.libera.chat'
+	server     = ''
 	port       = 6697
 	proxy      = None
 	ipv6       = False
 	ssl	       = True
 	ssl_verify = True
 	vhost      = None
-	channel	   = '#***REMOVED***'
+	channel    = ''
 	key	       = None
 
 class cert:
@@ -19,13 +19,13 @@ class cert:
 	password = None
 
 class ident:
-	nickname = 'blackJack'
-	username = 'blackjack'
+	nickname = ''
+	username = ''
 	realname = None
 
 class login:
 	network  = None
-	nickserv = '***REMOVED***'
+	nickserv = ''
 	operator = None
 
 class settings:

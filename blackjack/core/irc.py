@@ -72,7 +72,8 @@ def color(msg, foreground, background=None):
 
 class IRC(object):
 	def __init__(self):
-		self.ace_minus = False
+		self.player_ace_minus = 0
+		self.dealer_ace_minus = 0
 		self.player_hand      = []
 		self.dealer_hand	= []
 		self.last_move = 0
@@ -134,12 +135,12 @@ class IRC(object):
 				else: self.dealer_hand[i].append(card)
 		deck[card_type][2].remove(card_suit)
 		if (not dealer): 
-			if (self.player_total >= 11 and card_type == 'ace'): #If the player is at 11 points and the card is an ace, the ace becomes a value of 1
-				card_value = 1 
+#			if (self.player_total >= 11 and card_type == 'ace'): #If the player is at 11 points and the card is an ace, the ace becomes a value of 1
+#				card_value = 1 
 			self.player_total += card_value
 		else: 
-			if (self.dealer_total >= 11 and card_type == 'ace'): 
-				card_value = 1
+#			if (self.dealer_total >= 11 and card_type == 'ace'): 
+#				card_value = 1
 			self.dealer_total += card_value
 		return (card_type, card_suit)
 
@@ -203,18 +204,22 @@ class IRC(object):
 										msg_str += ' ' + i
 									self.sendmsg(chan, msg_str)
 							if self.player_total > 21:
-								if deck['ace'][1] == 1 and not self.ace_minus:
-									self.player_total	 = self.player_total - 10
-									self.ace_minus = True
-									if self.player_total > 21:
-										self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
-										self.reset()
-									else:
-										self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue)))
-										self.last_move = time.time()
-								else:
+								num_aces = 0
+								for i in self.player_hand:
+									if ("A" in i): #Check if there is an ace in the player's hand
+										num_aces = num_aces + 1
+								if (num_aces > self.player_ace_minus):
+									self.player_total = self.player_total - 10
+									self.player_ace_minus = self.player_ace_minus + 1
+								if self.player_total > 21: #Check if it's still over 21, even after adjusting using aces
 									self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
 									self.reset()
+								else:
+									self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue)))
+									self.last_move = time.time()
+								#else:
+								#	self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
+								#	self.reset()
 							else:
 								self.sendmsg(chan, '{0} {1}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue)))
 								self.last_move = time.time()
@@ -293,23 +298,42 @@ class IRC(object):
 		winner = ""
 		while (not done):
 			time.sleep(1)
+			self.last_move = time.time()
+
 			if self.dealer_total > 21:
-				self.sendmsg(chan, '{0} {1}'.format(color('DEALER BUSTS!', green), color('Dealer went over 21 and lost!', grey)))
-				winner = "Player"
-				done = True
-			elif (self.dealer_total) == 21: 
+				num_aces = 0
+				for i in self.dealer_hand:
+					if ("A" in i): #Check if there is an ace in the player's hand
+						num_aces = num_aces + 1
+				if (num_aces > self.dealer_ace_minus):
+					self.dealer_total = self.dealer_total - 10
+					self.dealer_ace_minus = self.dealer_ace_minus + 1
+				if self.player_total > 21: #Check if it's still over 21, even after adjusting using aces
+					self.sendmsg(chan, '{0} {1}'.format(color('DEALER BUSTS!', green), color('Dealer went over 21 and lost!', grey)))
+					winner = "Player"
+					done = True
+				else:
+					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
+
+			if (self.dealer_total) == 21: 
+				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
 				winner = "Dealer"
 				done = True
+
 			elif (self.dealer_total) >= 17: #Dealer always stands at or over 17
+				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
 				if (self.dealer_total >= self.player_total):
 					winner = "Dealer"
 					done = True
 				else:
 					winner = "Player"
 					done = True
+
 			elif self.player_total <= self.dealer_total: 
+				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
 				winner = "Dealer"
 				done = True
+
 			elif self.player_total > self.dealer_total: #Dealer will always hit if it's lower than player
 				self.draw(dealer=True)
 				msg_str = color('Dealer Hits - Dealer Hand',yellow)
@@ -402,6 +426,8 @@ class IRC(object):
 		self.player    = None
 		self.player_total     = 0
 		self.dealer_total	= 0
+		self.player_ace_minus = 0
+		self.dealer_ace_minus = 0
 		if self.mini_deck:
 			self.player_hand = []
 			self.dealer_hand = []
