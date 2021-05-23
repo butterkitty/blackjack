@@ -294,6 +294,7 @@ class IRC(object):
 		for i in self.dealer_hand:
 			msg_str += ' ' + i
 		self.sendmsg(chan, msg_str)
+		self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is:', yellow), color(str(self.dealer_total), light_blue)))
 		done = False
 		winner = ""
 		while (not done):
