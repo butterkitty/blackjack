@@ -261,7 +261,7 @@ class IRC(object):
 								msg_str = 'Dealer Hand'
 								msg_str += ' ' + str(self.dealer_hand[i][0]) #Only show first card since it's the dealer
 								self.sendmsg(chan, msg_str)
-						self.sendmsg(chan, '{0} {1}'.format(color('Your total is now:', yellow), color(str(self.player_total), light_blue), color('.hit or .stand', yellow)))						
+						self.sendmsg(chan, '{0} {1} {2}'.format(color('Your total is now:', yellow), color(str(self.player_total), light_blue), color('.hit or .stand', yellow)))						
 						self.last_move = time.time()
 						threading.Thread(target=self.timer).start()
 					elif self.player == nick:
