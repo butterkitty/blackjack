@@ -315,6 +315,7 @@ class IRC(object):
 					self.sendmsg(chan, '{0} {1}'.format(color('DEALER BUSTS!', green), color('Dealer went over 21 and lost!', grey)))
 					winner = "Player"
 					done = True
+					break
 				else:
 					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
 
@@ -323,7 +324,7 @@ class IRC(object):
 				winner = "Dealer"
 				done = True
 
-			elif (self.dealer_total >= 17) and (self.dealer_total <=21): #Dealer always stands at or over 17 if it's at 21 or under
+			elif (self.dealer_total >= 17): #Dealer always stands at or over 17 if it's at 21 or under
 				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
 				if (self.dealer_total >= self.player_total):
 					winner = "Dealer"
