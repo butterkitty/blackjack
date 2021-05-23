@@ -308,7 +308,7 @@ class IRC(object):
 				if (num_aces > self.dealer_ace_minus):
 					self.dealer_total = self.dealer_total - 10
 					self.dealer_ace_minus = self.dealer_ace_minus + 1
-				if self.player_total > 21: #Check if it's still over 21, even after adjusting using aces
+				if self.dealer_total > 21: #Check if it's still over 21, even after adjusting using aces
 					self.sendmsg(chan, '{0} {1}'.format(color('DEALER BUSTS!', green), color('Dealer went over 21 and lost!', grey)))
 					winner = "Player"
 					done = True
