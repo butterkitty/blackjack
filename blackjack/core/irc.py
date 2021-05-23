@@ -215,13 +215,13 @@ class IRC(object):
 									self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
 									self.reset()
 								else:
-									self.sendmsg(chan, '{0} {1} {2}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue, color('.hit or .stand', yellow))))
+									self.sendmsg(chan, '{0} {1} {2}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue), color('.hit or .stand', yellow)))
 									self.last_move = time.time()
 								#else:
 								#	self.sendmsg(chan, '{0} {1}'.format(color('BUST!', red), color('You went over 21 and lost!', grey)))
 								#	self.reset()
 							else:
-								self.sendmsg(chan, '{0} {1} {2}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue, color('.hit or .stand', yellow))))
+								self.sendmsg(chan, '{0} {1} {2}'.format(color('You drew a {0} of {1}! Your total is now:'.format(card_type, card_suit[1]), yellow),  color(str(self.player_total), light_blue), color('.hit or .stand', yellow)))
 								self.last_move = time.time()
 						else:
 							self.error(chan, 'You are not currently playing!', '{0} is playing still'.format(self.player))
