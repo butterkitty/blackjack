@@ -1,5 +1,14 @@
 ![](screens/banner.png)
 
+###### Install
+
+docker run -v </config/path>:/blackjack/core/ \
+    -e TERM=xterm \
+    --name=blackjack-irc \
+    --restart unless-stopped \
+    -d blackjack-irc
+
+
 ###### Commands
 | Command | Description |
 | --- | --- |

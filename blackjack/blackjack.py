@@ -14,7 +14,7 @@ import debug
 debug.info()
 if not debug.check_version(3):
 	debug.error_exit('BlackJack requires Python 3!')
-elif debug.check_privileges():
-	debug.error_exit('Do not run BlackJack as admin/root!')
+#elif debug.check_privileges():
+#	debug.error_exit('Do not run BlackJack as admin/root!')
 import irc
 irc.BlackJack.connect()
