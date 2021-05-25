@@ -9,6 +9,7 @@ import socket
 import ssl
 import threading
 import time
+import sqlite3
 
 import config
 import debug
@@ -84,9 +85,88 @@ class IRC(object):
 		self.mini_deck  = config.settings.mini_deck #Full size not currently working
 		self.sock       = None
 		self.username	= config.ident.username
+		self.confirm_code = {"":""}
+		self.db_check()
+
+	def db_check(self):
+		db = sqlite3.connect('game.db')
+		db_cur = db.cursor()
+
+		#get the tables with the name
+		tables = db_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='Scores';").fetchall()
+		if tables == []:
+			print('Game table doesn\'t exist. Creating...')
+			# Create table
+			db_cur.execute('''CREATE TABLE IF NOT EXISTS Scores
+            	   (Nick text, Wins integer, Losses integer, Ratio real)''')
+			db.commit()
+		db.close()
+
+	#Not used yet becuase an admin table is required
+	def db_reset_table(self, table):
+		db = sqlite3.connect('game.db')
+		db_cur = db.cursor()	
+
+		db_cur.execute("DROP TABLE IF EXISTS ?", [table])
+		self.db_check()
+
+	def db_add_score(self, chan, nick, winner):
+		db = sqlite3.connect('game.db')
+		db_cur = db.cursor()
+
+		#Check if the nick is already in the score list
+		db_cur.execute("SELECT count(Nick) as count FROM Scores WHERE Nick = '?'", [nick])
+		#if the count is not 1, then nick isn't in the db, so we need to add it
+		if not db_cur.fetchone()['count'] == 1:
+			db_cur.execute("INSERT into Scores values ('?','?','?','?')", [nick, 0, 0, 0])
+			db.commit()
+		if (winner == nick.lower()):
+			db_cur.execute("UPDATE Scores SET Wins = Wins + 1 WHERE Nick = '?'", [nick])
+			db.commit()
+		elif (not winner == nick.lower()):
+			db_cur.execute("UPDATE Scores SET Losses = Losses + 1 WHERE Nick = '?'", [nick])
+			db.commit()
+		#Need to calulate new ratio
+		db_cur.execute('''SELECT Wins, Losses, 
+       		ROUND(Wins / Losses, 2) AS Ratio
+			FROM Scores ''')
+		ratio = db_cur.fetchone()['Ratio']
+		db_cur.execute("UPDATE Scores SET Ratio = '?' WHERE Nick = '?'", [ratio, nick])
+		db.commit()
+		db.close()
+
+	def db_reset_score(self, nick):
+		db = sqlite3.connect('game.db')
+		db_cur = db.cursor()
+
+		#Check if the nick is already in the score list
+		db_cur.execute("SELECT count(Nick) as count FROM Scores WHERE Nick = '?'", [nick])
+		#if the count is 1, then nick is in the db
+		if db_cur.fetchone()['count'] == 1:
+			db_cur.execute("UPDATE Scores SET Wins = 0, Losses = 0, Ratio = 0 WHERE Nick = '?'", [nick])
+			db.commit()
+			db.close()
+			return True
+		db.close()
+		return False
+
+	def db_check_score(self, chan, nick):
+		db = sqlite3.connect('game.db')
+		db_cur = db.cursor()
+		
+		#Check if the nick is already in the score list
+		db_cur.execute("SELECT Wins, Losses, Ratio FROM Scores WHERE Nick = '?'", [nick])
+		row = db_cur.fetchone()
+		db.close()
+		if row:
+			self.sendmsg(chan, "{0} has: {1} Wins, {2} Losses, which is a ratio of {3}", [nick, row['Wins'], row['Losses'], row['Ratio']])
+		else:
+			self.sendmsg(chan, "Sorry {0}, but it looks like you haven't played here before", [nick])
+
 
 	def action(self, chan, msg):
 		self.sendmsg(chan, '\x01ACTION {0}\x01'.format(msg))
+
 
 	def connect(self):
 		try:
@@ -287,6 +367,17 @@ class IRC(object):
 							self.error(chan, 'You are not currently playing!', '{0} is playing still'.format(self.player))
 					else:
 						self.error(chan, 'You are not currently playing!')
+				elif cmd == 'resetscore':
+					if args == "":
+						self.confirm_code[nick] = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+						sendmsg("{0}, If you would like to reset your score, please type {1} {2}", nick, cmd, self.confirm_code[nick])
+					elif args == self.confirm_code[nick]:
+						self.db_reset_score(nick)
+						del self.confirm_code[nick]
+					else:
+						sendmsg("{0}, You have entered an invalid confirmation code", nick)
+				elif cmd == 'checkscore':
+					self.db_check_score(chan, nick)
 			self.last_time = time.time()
 
 	def dealer_play(self, chan):
@@ -347,8 +438,12 @@ class IRC(object):
 		
 		if (winner != "Dealer"):
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - ' + self.player + ' wins with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
+			self.db_add_score(chan, self.player, self.player)
 		else:
+			self.db_add_score(chan, self.player, "Dealer")
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - Dealer wins with:', green), color(str(self.dealer_total), light_blue), color(self.player + ' with:', red), color(str(self.player_total), light_blue)))
+
+		self.db_check_score(chan, self.player)
 		self.reset()
 
 	def event_nick_in_use(self):
