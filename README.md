@@ -15,37 +15,37 @@ docker run -v </config/path>:/blackjack/core/ \
 # config.py
 
 class connection:
-        server     = 'irc.libera.chat'
-        port       = 6697
-        proxy      = None
-        ipv6       = False
-        ssl            = True
-        ssl_verify = True
-        vhost      = None
-        channel    = '#***REMOVED***'
-        key            = None
+	server     = 'irc.libera.chat'
+	port       = 6697
+	proxy      = None
+	ipv6       = False
+	ssl	       = True
+	ssl_verify = True
+	vhost      = None
+	channel    = ''
+	key	       = None
 
 class cert:
-        file     = None
-        key      = None
-        password = None
+	file     = None
+	key      = None
+	password = None
 
 class ident:
-        nickname = '***REMOVED***'
-        username = '***REMOVED***'
-        realname = None
+	nickname = 'Sasds7732'
+	username = 'Sasds7732'
+	realname = None
 
 class login:
-        network  = None
-        nickserv = '***REMOVED***'
-        operator = None
+	network  = None
+	nickserv = '' #Nickserv password here
+	operator = None
 
 class settings:
-        cmd_char = '.'
-        log      = False
-        modes    = None
-        mini_deck = True
-        timeout = 30
+	cmd_char = '.'
+	log      = False
+	modes    = None
+	mini_deck = True
+	timeout	= 30
 ```
 ## Commands
 | Command | Description |
