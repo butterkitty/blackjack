@@ -343,7 +343,7 @@ class IRC(object):
 				if (not self.dealer_total > 21): 
 					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
 		
-		if (winner != "Dealer"):
+		if (winner == "Player"):
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - ' + self.player + ' wins with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
 		elif (winner == "TIE"):
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - Both ' + self.player +' and the dealer have an equal score | ' + self.player + ' with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
