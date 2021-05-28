@@ -315,23 +315,21 @@ class IRC(object):
 					done = True
 					break
 				else:
-					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now:', yellow), color(str(self.dealer_total), light_blue)))
+					self.sendmsg(chan, '{0} {1}'.format(color('Dealer total is now due to ace low:', yellow), color(str(self.dealer_total), light_blue)))
 
-			if (self.dealer_total) == 21: 
+			if (self.dealer_total >= 17): #Dealer always stands at or over 17 if it's at 21 or under
 				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
-				winner = "Dealer"
-				done = True
-
-			elif (self.dealer_total >= 17): #Dealer always stands at or over 17 if it's at 21 or under
-				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
-				if (self.dealer_total >= self.player_total):
+				if (self.dealer_total > self.player_total):
 					winner = "Dealer"
+					done = True
+				elif (self.dealer_total == self.player_total): #When dealer = player totals then there is a tie 
+					winner = "TIE"
 					done = True
 				else:
 					winner = "Player"
 					done = True
 
-			elif self.player_total <= self.dealer_total: 
+			elif self.player_total < self.dealer_total: 
 				self.sendmsg(chan, 'The dealer chosen to stand with {0} as its total.'.format(color(self.dealer_total, light_blue)))
 				winner = "Dealer"
 				done = True
@@ -347,12 +345,14 @@ class IRC(object):
 		
 		if (winner != "Dealer"):
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - ' + self.player + ' wins with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
+		elif (winner == "TIE"):
+			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - Both ' + self.player +' and the dealer have an equal score | ' + self.player + ' with:', green), color(str(self.player_total), light_blue), color('Dealer with:', red), color(str(self.dealer_total), light_blue)))
 		else:
 			self.sendmsg(chan, '{0} {1} | {2} {3}'.format(color('Game Finished - Dealer wins with:', green), color(str(self.dealer_total), light_blue), color(self.player + ' with:', red), color(str(self.player_total), light_blue)))
 		self.reset()
 
 	def event_nick_in_use(self):
-		debug.error_exit('BlackJack is already running.')
+		debug.error_exit('Nickname is already in use.')
 
 	def event_part(self, nick, chan):
 		if self.player == nick:
